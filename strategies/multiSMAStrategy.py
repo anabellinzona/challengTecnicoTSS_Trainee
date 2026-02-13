@@ -11,16 +11,19 @@ class MultiSMAStrategy(bt.Strategy):
 
         self.positionByStrategy = {}
 
-        self.trades_log = [] 
-        self.portfolio_values = [] 
+        self.trades_log = []
+        self.portfolio_values = []
 
         for data in self.datas:
-            self.sma10 = bt.indicators.SMA(data.close, period = 10)
-            self.sma30 = bt.indicators.SMA(data.close, period = 30)
+            sma10 = bt.indicators.SMA(data.close, period = 10)
+            sma30 = bt.indicators.SMA(data.close, period = 30)
+
+            self.sma10[data] = sma10
+            self.sma30[data] = sma30
 
             self.crossover[data] = bt.indicators.CrossOver(
-                self.sma10[data],
-                self.sma30[data]
+                sma10,
+                sma30
             )
 
             self.positionByStrategy[data] = { 
@@ -31,135 +34,142 @@ class MultiSMAStrategy(bt.Strategy):
     
     def next(self):
 
+        # print("NEXT ejecutando:", self.datas[0].datetime.date(0))
+
         portfolio_value = self.broker.getvalue()
+
         self.portfolio_values.append({
             "date": self.datas[0].datetime.date(0),
             "value": portfolio_value
         })
 
-        #ESTRATÉGIA SMA10
-        if self.data.close[0] > self.sma10[0]: 
-            if self.positionByStrategy["sma10"] == 0: 
-                
-                portfolio_value = self.broker.getvalue() 
-                amount_to_invest = portfolio_value * 0.10 
-                price = self.data.close[0]
-                size = int(amount_to_invest / price) 
+        for data in self.datas:
 
-                cash = self.broker.getcash()
+            price = data.close[0]
+            cash = self.broker.getcash()
 
-                if cash >= amount_to_invest and size > 0:
-                    self.buy(size = size)
-                    self.positionByStrategy["sma10"] += size
+            print("PRUEBA: " + data._name, price, self.sma10[data][0])
+
+            if len(data) < 30:
+                continue
+            
+            #STRATEGY SMA10
+            if price > self.sma10[data][0]: 
+                if self.positionByStrategy[data]["sma10"] == 0: 
+                    
+                    amount_to_invest = portfolio_value * 0.10 
+                    size = int(amount_to_invest / price) 
+
+                    if cash >= amount_to_invest and size > 0:
+                        self.buy(data = data, size = size)
+                        self.positionByStrategy[data]["sma10"] += size
+
+                        self.trades_log.append({
+                            "date": self.datas[0].datetime.date(0),
+                            "asset": data._name,
+                            "strategy": "SMA10",
+                            "action": "BUY",
+                            "price": price,
+                            "size": size
+                        })
+
+            elif price < self.sma10[data][0]:
+                if self.positionByStrategy[data]["sma10"] > 0: 
+                    
+                    size = self.positionByStrategy[data]["sma10"]
+                    
+                    self.sell(data = data, size = size)
+                    
+                    self.positionByStrategy[data]["sma10"] = 0
 
                     self.trades_log.append({
                         "date": self.datas[0].datetime.date(0),
+                        "asset": data._name,
                         "strategy": "SMA10",
-                        "action": "BUY",
+                        "action": "SELL",
                         "price": price,
                         "size": size
                     })
-
-        elif self.data.close[0] < self.sma10[0]:
-            if self.positionByStrategy["sma10"] > 0: 
-                
-                size = self.positionByStrategy["sma10"]
-                
-                self.sell(size = size)
-                
-                self.positionByStrategy["sma10"] = 0
-
-                self.trades_log.append({
-                    "date": self.datas[0].datetime.date(0),
-                    "strategy": "SMA10",
-                    "action": "SELL",
-                    "price": self.data.close[0],
-                    "size": size
-                })
         
 
 
-        #ESTRATÉGICA SMA30
-        if self.data.close[0] > self.sma30[0]:
-            if self.positionByStrategy["sma30"] == 0:
+            #ESTRATÉGICA SMA30
+            if price > self.sma30[data][0]:
+                if self.positionByStrategy[data]["sma30"] == 0:
 
-                portfolio_value = self.broker.getvalue()
-                amount_to_invest = portfolio_value * 0.10
-                price = self.data.close[0]
-                size = int(amount_to_invest / price)
+                    amount_to_invest = portfolio_value * 0.10
+                    size = int(amount_to_invest / price)
 
-                cash = self.broker.getcash()
+                    if cash >= amount_to_invest and size > 0:
+                        self.buy(data = data, size = size)
+                        self.positionByStrategy[data]["sma30"] += size
 
-                if cash >= amount_to_invest and size > 0:
-                    self.buy(size = size)
-                    self.positionByStrategy["sma30"] += size
+                        self.trades_log.append({
+                            "date": self.datas[0].datetime.date(0),
+                            "asset": data._name,
+                            "strategy": "SMA30",
+                            "action": "BUY",
+                            "price": price,
+                            "size": size
+                        })
+
+
+            elif price < self.sma30[data][0]:
+                if self.positionByStrategy[data]["sma30"] > 0:
+                    size = self.positionByStrategy[data]["sma30"]
+
+                    self.sell(data = data, size = size)
+                    self.positionByStrategy[data]["sma30"] = 0
 
                     self.trades_log.append({
                         "date": self.datas[0].datetime.date(0),
+                        "asset": data._name,
                         "strategy": "SMA30",
-                        "action": "BUY",
+                        "action": "SELL",
                         "price": price,
                         "size": size
                     })
 
 
-        elif self.data.close[0] < self.sma30[0]:
-            if self.positionByStrategy["sma30"] > 0:
-                size = self.positionByStrategy["sma30"]
+            # ESTRATEGIA GOLDEN
+            if self.crossover[data] > 0:
+                if self.positionByStrategy[data]["golden"] == 0:
 
-                self.sell(size = size)
-                self.positionByStrategy["sma30"] = 0
+                    amount_to_invest = portfolio_value * 0.10
+                    size = int(amount_to_invest / price)
 
-                self.trades_log.append({
-                    "date": self.datas[0].datetime.date(0),
-                    "strategy": "SMA30",
-                    "action": "SELL",
-                    "price": self.data.close[0],
-                    "size": size
-                })
+                    if cash >= amount_to_invest and size > 0:
+                        self.buy(data = data, size = size)
+                        self.positionByStrategy[data]["golden"] += size
+
+                        self.trades_log.append({
+                            "date": self.datas[0].datetime.date(0),
+                            "asset": data._name,
+                            "strategy": "GOLDEN",
+                            "action": "BUY",
+                            "price": price,
+                            "size": size
+                        })
 
 
-        #ESTRATEGIA GOLDEN
-        if self.crossover > 0:
-            if self.positionByStrategy["golden"] == 0:
+            elif self.crossover[data] < 0:
+                if self.positionByStrategy[data]["golden"] > 0:
 
-                portfolio_value = self.broker.getvalue()
-                amount_to_invest = portfolio_value * 0.10
-                price = self.data.close[0]
-                size = int(amount_to_invest / price)
+                    size = self.positionByStrategy[data]["golden"]
 
-                cash = self.broker.getcash()
-
-                if cash >= amount_to_invest and size > 0:
-                    self.buy(size = size)
-                    self.positionByStrategy["golden"] += size
+                    self.sell(data = data, size = size)
+                    self.positionByStrategy[data]["golden"] = 0
 
                     self.trades_log.append({
                         "date": self.datas[0].datetime.date(0),
+                        "asset": data._name,
                         "strategy": "GOLDEN",
-                        "action": "BUY",
+                        "action": "SELL",
                         "price": price,
                         "size": size
                     })
-
-
-        elif self.crossover < 0:
-            if self.positionByStrategy["golden"] > 0:
-
-                size = self.positionByStrategy["golden"]
-
-                self.sell(size = size)
-                self.positionByStrategy["golden"] = 0
-
-                self.trades_log.append({
-                    "date": self.datas[0].datetime.date(0),
-                    "strategy": "GOLDEN",
-                    "action": "SELL",
-                    "price": self.data.close[0],
-                    "size": size
-                })
-        #solo COMPRA si NO TIENE nada y solo VENDE SI TIENE algo
-    
+            #solo COMPRA si NO TIENE nada y solo VENDE SI TIENE algo
+        
     def stop(self):
         print("="*40)
         print("TRASACTIONS") 
@@ -168,9 +178,9 @@ class MultiSMAStrategy(bt.Strategy):
         for trade in self.trades_log:
             print( f"Date: {trade['date']} | "
                   f"Strategy: {trade['strategy']} | "
-                  f"Action: {trade["action"]} | "
-                  f"Price: {round(trade["price"], 2)} | "
-                  f"Size: {trade["size"]} |")
+                  f"Action: {trade['action']} | "
+                  f"Price: {round(trade['price'], 2)} | "
+                  f"Size: {trade['size']} |")
         
         print("="*40)
         print("PORTFOLIO VALUE")

@@ -1,14 +1,23 @@
 import yfinance as yf
+import os
 
-data = yf.download("MSFT", start="2021-01-01", end="2021-12-31")
+assets = ["MSFT", "GOOG", "AAPL", "TSLA"]
 
-if isinstance(data.columns, tuple) or hasattr(data.columns, 'levels'):
-    data.columns = data.columns.get_level_values(0)
+os.makedirs("data", exist_ok=True)
 
-data.reset_index(inplace=True)
+for asset in assets:
+    print(f"Descargando {asset}...")
 
-data = data[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+    data = yf.download(
+        asset,
+        start="2021-01-01",
+        end="2021-12-31",
+        interval="1d"
+    )
 
-data.to_csv("data/msft.csv", index=False)
+    filepath = f"data/{asset}.csv"
+    data.to_csv(filepath)
 
-print("Datos descargados correctamente.")
+    print(f"Guardado en {filepath}")
+
+print("Descarga completa.")
