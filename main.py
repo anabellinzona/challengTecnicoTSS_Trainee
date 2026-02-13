@@ -1,5 +1,6 @@
 import backtrader as bt
 from strategies.multiSMAStrategy import MultiSMAStrategy
+import datetime
 
 
 class TestStrategy(bt.Strategy):
@@ -12,23 +13,19 @@ def run():
 
     cerebro.broker.setcash(100000)
 
-    cerebro.addstrategy(MultiSMAStrategy)
+    assets = ["MSFT", "GOOG", "APPL", "TSLA"]
 
-    data = bt.feeds.GenericCSVData(
-        dataname='data/msft.csv',
-        dtformat='%Y-%m-%d',
-        datetime=0,
-        open=1,
-        high=2,
-        low=3,
-        close=4,
-        volume=5,
-        openinterest=-1,
-        headers=True
-    )
+    for asset in assets:
 
+        data = bt.feeds.YahooFinanceCSVData(
+            dataname=f'data/{asset}.csv',
+            fromdate=datetime(2021, 1, 1),
+            todate=datetime(2021, 12, 31)
+        )
 
-    cerebro.adddata(data)
+        cerebro.adddata(data, name=asset)
+
+    cerebro.addstrategy(MultiSMAStrategy)    
 
     print("Valor inicial del portfolio:", cerebro.broker.getvalue())
 
