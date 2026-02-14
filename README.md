@@ -34,7 +34,7 @@ El sistema simula la evolución de un portfolio con un capital inicial de 100.00
 ### La simulación se ejecutó sobre:
 * MSFT (Microsoft)
 * GOOG (Google)
-* APPL (Apple)
+* AAPL (Apple)
 * TSLA (Tesla)
 Teniendo en cuenta los datos correspondientes al 2021
 
@@ -59,6 +59,29 @@ challengeTecnicoTSS_Trainee/
 ├── requirements.txt # Dependencias del proyecto 
 └── README.md # Documentación del challenge
 ```
+
+## Instalación y ejecución
+
+1. Instalar dependencias:
+```bash
+pip install -r requirements.txt
+```
+
+2. (Opcional) Limpiar/formatear datos:
+```bash
+python clean_data.py
+```
+
+3. Ejecutar el backtest:
+```bash
+python main.py
+```
+
+## Salidas generadas
+
+El sistema genera dos archivos CSV en la carpeta `outputs/`:
+- `trades.csv`: registro completo de transacciones
+- `portfolio.csv`: evolución diaria del valor del portfolio
 
 ## Resultados generados
 ### Al finalizar la ejecución se muestran los resultados finales:
@@ -100,4 +123,5 @@ challengeTecnicoTSS_Trainee/
 - Maximum Drawdown
 - Comparación vs Buy & Hold
 - Costos de transacción
+
 
