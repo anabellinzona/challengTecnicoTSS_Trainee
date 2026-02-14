@@ -207,11 +207,12 @@ class MultiSMAStrategy(bt.Strategy):
 
             write = csv.writer(file)
 
-            write.writerow(["date", "strategy", "action", "price", "size"])
+            write.writerow(["date", "asset", "strategy", "action", "price", "size"])
 
             for trade in self.trades_log:
                 write.writerow([
                     trade["date"],
+                    trade["asset"],
                     trade["strategy"],
                     trade["action"],
                     trade["price"],
