@@ -46,8 +46,6 @@ class MultiSMAStrategy(bt.Strategy):
             price = data.close[0]
             cash = self.broker.getcash()
 
-            print("PRUEBA: " + data._name, price, self.sma10[data][0])
-
             if len(data) < 30:
                 continue
             
