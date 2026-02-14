@@ -2,12 +2,6 @@ import backtrader as bt
 from strategies.multiSMAStrategy import MultiSMAStrategy
 from datetime import datetime
 
-
-class TestStrategy(bt.Strategy):
-    def next(self):
-        pass
-
-
 def run():
     cerebro = bt.Cerebro()
 

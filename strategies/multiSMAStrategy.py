@@ -34,8 +34,6 @@ class MultiSMAStrategy(bt.Strategy):
     
     def next(self):
 
-        # print("NEXT ejecutando:", self.datas[0].datetime.date(0))
-
         portfolio_value = self.broker.getvalue()
 
         self.portfolio_values.append({
@@ -168,7 +166,6 @@ class MultiSMAStrategy(bt.Strategy):
                         "price": price,
                         "size": size
                     })
-            #solo COMPRA si NO TIENE nada y solo VENDE SI TIENE algo
         
     def stop(self):
         print("="*40)
