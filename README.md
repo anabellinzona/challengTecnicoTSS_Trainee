@@ -48,7 +48,7 @@ ChallengeTecnicoTSS_Trainee
 challengeTecnicoTSS_Trainee/ 
 │ 
 ├── data/ # CSV originales descargados de Yahoo Finance 
-| └── APPL
+| └── AAPL
 | └── MSFT
 | └── GOOG
 | └── TSLA
@@ -100,3 +100,4 @@ challengeTecnicoTSS_Trainee/
 - Maximum Drawdown
 - Comparación vs Buy & Hold
 - Costos de transacción
+
